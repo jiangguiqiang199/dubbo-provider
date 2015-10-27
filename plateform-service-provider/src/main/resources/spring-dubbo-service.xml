@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+    xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+        http://code.alibabatech.com/schema/dubbo
+        http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
+    <!-- 声明需要暴露的服务接口 -->
+    <dubbo:service interface="com.creditease.service.IDubboService" ref="dubboService" />
+    <!-- 
+    	使用响应的协议暴露相应的服务：
+    	 使用dubbo协议暴露服务 
+    <dubbo:service interface="com.alibaba.hello.api.HelloService" version="1.0.0" ref="helloService" protocol="dubbo" />
+                        使用rmi协议暴露服务
+    <dubbo:service interface="com.alibaba.hello.api.DemoService" version="1.0.0" ref="demoService" protocol="rmi" />
+                       使用多个协议暴露服务
+    dubbo:service id="helloService" interface="com.alibaba.hello.api.HelloService" version="1.0.0" protocol="dubbo,hessian" />
+     -->
+     
+     <!-- 
+                       举例说明：中文站有些服务来不及在青岛部署，只在杭州部署，而青岛的其它应用需要引用此服务，就可以将服务同时注册到两个注册中心。
+     	多注册中心配置：
+     	杭州注册中心：
+     	<dubbo:registry id="hangzhouRegistry" address="10.20.141.150:9090" />
+     	青岛注册中心：
+     	<dubbo:registry id="qingdaoRegistry" address="10.20.141.151:9010" default="false" />
+     	将一个服务注册到两个注册中心：
+     	<dubbo:service interface="com.alibaba.hello.api.HelloService" version="1.0.0" ref="helloService" 
+     	                   registry="hangzhouRegistry,qingdaoRegistry" />
+                       不同的服务注册到不同的注册中心：  
+        <dubbo:service interface="com.alibaba.hello.api.HelloService" version="1.0.0" ref="helloService" registry="chinaRegistry" />
+        <dubbo:service interface="com.alibaba.hello.api.DemoService" version="1.0.0" ref="demoService" registry="intlRegistry" />   	                   
+      -->
+      
+      
+      <!-- 
+      		并发控制：
+      		限制com.foo.BarService的每个方法，服务器端并发执行（或占用线程池线程数）不能超过10个：      		
+                <dubbo:service interface="com.foo.BarService" executes="10" />
+                                   限制com.foo.BarService的sayHello方法，服务器端并发执行（或占用线程池线程数）不能超过10个：
+                <dubbo:service interface="com.foo.BarService">
+				    <dubbo:method name="sayHello" executes="10" />
+				</dubbo:service>
+                                 限制com.foo.BarService的每个方法，每客户端并发执行（或占用连接的请求数）不能超过10个：	
+                 <dubbo:service interface="com.foo.BarService" actives="10" />
+                 or
+                 <dubbo:reference interface="com.foo.BarService" actives="10" />	
+                                限制com.foo.BarService的sayHello方法，每客户端并发执行（或占用连接的请求数）不能超过10个：
+                 <dubbo:service interface="com.foo.BarService">
+				    <dubbo:method name="sayHello" actives="10" />
+				 </dubbo:service>
+				 or
+				 <dubbo:reference interface="com.foo.BarService">
+				    <dubbo:method name="sayHello" actives="10" />
+				</dubbo:service>
+		   说明：如果<dubbo:service>和<dubbo:reference>都配了actives，<dubbo:reference>优先
+       -->
+       
+       
+       <!-- 
+       		连接数的控制：
+       		限制服务器端接受的连接不能超过10个：（以连接在Server上，所以配置在Provider上）
+               <dubbo:provider protocol="dubbo" accepts="10" />
+               <dubbo:protocol name="dubbo" accepts="10" />
+                                    限制客户端服务使用连接连接数：(如果是长连接，比如Dubbo协议，connections表示该服务对每个提供者建立的长连接数)
+               <dubbo:reference interface="com.foo.BarService" connections="10" />
+               or
+               <dubbo:service interface="com.foo.BarService" connections="10" />
+                                           说明：如果<dubbo:service>和<dubbo:reference>都配了connections
+        -->
+        
+        <!-- 
+        	延迟连接:延迟连接，用于减少长连接数，当有调用发起时，再创建长连接。
+        	<dubbo:protocol name="dubbo" lazy="true" />
+        	只对使用长连接的dubbo协议生效。
+         -->
+         
+         <!-- 
+         		粘滞连接:
+         		1、   粘滞连接用于有状态服务，尽可能让客户端总是向同一提供者发起调用，除非该提供者挂了，再连另一台
+         		2、  粘滞连接将自动开启延迟连接，以减少长连接数
+         		<dubbo:protocol name="dubbo" sticky="true" />
+          -->
+          
+          <!-- 
+          			令牌验证:
+          			1、   防止消费者绕过注册中心访问提供者
+          			2、  在注册中心控制权限，以决定要不要下发令牌给消费者
+          			3、 注册中心可灵活改变授权方式，而不需修改或升级提供者
+          			
+          			全局设置开启令牌验证：
+          			随机token令牌，使用UUID生成：<dubbo:provider interface="com.foo.BarService" token="true" />
+          			固定token令牌，相当于密码：<dubbo:provider interface="com.foo.BarService" token="123456" />
+          			
+          			在服务级别设置：
+          			随机token令牌，使用UUID生成：<dubbo:service interface="com.foo.BarService" token="true" />
+          			固定token令牌，相当于密码：<dubbo:service interface="com.foo.BarService" token="123456" />
+          			
+          			在协议级别设置：
+          			随机token令牌，使用UUID生成：<dubbo:protocol name="dubbo" token="true" />
+          			固定token令牌，相当于密码：<dubbo:protocol name="dubbo" token="123456" />
+          			
+           -->
+</beans>

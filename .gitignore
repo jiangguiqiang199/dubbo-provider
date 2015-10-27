@@ -1,0 +1,9 @@
+#.gitignore
+*.settings
+target
+test
+.project
+.classpath
+/.metadata
+.metadata
+metadata
